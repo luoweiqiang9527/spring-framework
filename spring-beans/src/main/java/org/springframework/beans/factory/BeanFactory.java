@@ -21,7 +21,7 @@ import org.springframework.core.ResolvableType;
 import org.springframework.lang.Nullable;
 
 /**
- * The root interface for accessing a Spring bean container.
+ * 用于访问 Spring Bean 容器的根接口。
  *
  * <p>This is the basic client view of a bean container;
  * further interfaces such as {@link ListableBeanFactory} and
@@ -129,10 +129,10 @@ public interface BeanFactory {
 
 
 	/**
-	 * Return an instance, which may be shared or independent, of the specified bean.
-	 * <p>This method allows a Spring BeanFactory to be used as a replacement for the
-	 * Singleton or Prototype design pattern. Callers may retain references to
-	 * returned objects in the case of Singleton beans.
+	 * 返回指定 Bean 的一个实例，该实例可以是共享的，也可以是独立的。
+	 * <p>此方法允许使用 Spring BeanFactory 作为单例或原型设计模式。
+	 *  调用方可以保留对以下内容的引用
+	 * 在 Singleton Bean 的情况下返回对象。
 	 * <p>Translates aliases back to the corresponding canonical bean name.
 	 * <p>Will ask the parent factory if the bean cannot be found in this factory instance.
 	 * @param name the name of the bean to retrieve

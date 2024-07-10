@@ -56,6 +56,8 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.entry;
 
 /**
+ * 泛型测试
+ *
  * @author Juergen Hoeller
  * @author Chris Beams
  * @author Sam Brannen
@@ -154,7 +156,7 @@ class BeanFactoryGenericsTests {
 				new ClassPathResource("genericBeanTests.xml", getClass()));
 
 		GenericBean<?> gb = (GenericBean<?>) bf.getBean("listOfArrays");
-		assertThat(gb.getListOfArrays()).containsExactly(new String[] {"value1", "value2"});
+		assertThat(gb.getListOfArrays()).containsExactly(new String[]{"value1", "value2"});
 	}
 
 	@Test
@@ -714,7 +716,8 @@ class BeanFactoryGenericsTests {
 		assertThat(beans).hasSize(1);
 	}
 
-	@Test  // SPR-16720
+	@Test
+		// SPR-16720
 	void parameterizedInstanceFactoryMethodWithTempClassLoader() {
 		DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
 		bf.setTempClassLoader(new OverridingClassLoader(getClass().getClassLoader()));
@@ -849,7 +852,8 @@ class BeanFactoryGenericsTests {
 				bf.getBean("store2", NumberStore.class), bf.getBean("store1", NumberStore.class));
 	}
 
-	@Test  // gh-32489
+	@Test
+		// gh-32489
 	void genericMatchingAgainstFactoryBeanClass() {
 		DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
 		bf.setAutowireCandidateResolver(new GenericTypeAwareAutowireCandidateResolver());
@@ -865,7 +869,8 @@ class BeanFactoryGenericsTests {
 		assertThat(bf.getBeanProvider(bd.getResolvableType())).containsOnly(bf.getBean(MyFactoryBean.class));
 	}
 
-	@Test  // gh-32489
+	@Test
+		// gh-32489
 	void genericMatchingAgainstLazyFactoryBeanClass() {
 		DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
 		bf.setAutowireCandidateResolver(new GenericTypeAwareAutowireCandidateResolver());
@@ -948,7 +953,7 @@ class BeanFactoryGenericsTests {
 
 		@SuppressWarnings("unchecked")
 		public <T> T createMock(Class<T> toMock) {
-			return (T) Proxy.newProxyInstance(BeanFactoryGenericsTests.class.getClassLoader(), new Class<?>[] {toMock},
+			return (T) Proxy.newProxyInstance(BeanFactoryGenericsTests.class.getClassLoader(), new Class<?>[]{toMock},
 					(proxy, method, args) -> {
 						throw new UnsupportedOperationException("mocked!");
 					});
@@ -1012,6 +1017,7 @@ class BeanFactoryGenericsTests {
 				public NumberStore<Double> getObject() {
 					return new DoubleStore();
 				}
+
 				@Override
 				public Class<?> getObjectType() {
 					return DoubleStore.class;
@@ -1026,6 +1032,7 @@ class BeanFactoryGenericsTests {
 				public NumberStore<Float> getObject() {
 					return new FloatStore();
 				}
+
 				@Override
 				public Class<?> getObjectType() {
 					return FloatStore.class;
