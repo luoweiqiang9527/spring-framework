@@ -22,11 +22,15 @@ import org.springframework.beans.BeansException;
  * Factory hook that allows for custom modification of an application context's
  * bean definitions, adapting the bean property values of the context's underlying
  * bean factory.
- *
+ * <p>
+ * Factory 钩子，允许自定义修改应用程序上下文的 Bean 定义，调整上下文的底层 Bean 工厂的 Bean 属性值。
  * <p>Useful for custom config files targeted at system administrators that
  * override bean properties configured in the application context. See
  * {@link PropertyResourceConfigurer} and its concrete implementations for
  * out-of-the-box solutions that address such configuration needs.
+ * <p>
+ * 对于针对系统管理员的自定义配置文件非常有用，这些配置文件会覆盖在应用程序上下文中配置的 Bean 属性。
+ * 请参阅 PropertyResourceConfigurer 及其针对满足此类配置需求的开箱即用解决方案的具体实现。
  *
  * <p>A {@code BeanFactoryPostProcessor} may interact with and modify bean
  * definitions, but never bean instances. Doing so may cause premature bean
@@ -55,9 +59,9 @@ import org.springframework.beans.BeansException;
  *
  * @author Juergen Hoeller
  * @author Sam Brannen
- * @since 06.07.2003
  * @see BeanPostProcessor
  * @see PropertyResourceConfigurer
+ * @since 06.07.2003
  */
 @FunctionalInterface
 public interface BeanFactoryPostProcessor {
@@ -67,6 +71,8 @@ public interface BeanFactoryPostProcessor {
 	 * initialization. All bean definitions will have been loaded, but no beans
 	 * will have been instantiated yet. This allows for overriding or adding
 	 * properties even to eager-initializing beans.
+	 * 在标准初始化后修改应用程序上下文的内部 Bean 工厂。所有 Bean 定义都已加载，但尚未实例化任何 Bean。这允许覆盖或添加属性，甚至可以快速初始化 bean。
+	 *
 	 * @param beanFactory the bean factory used by the application context
 	 * @throws org.springframework.beans.BeansException in case of errors
 	 */

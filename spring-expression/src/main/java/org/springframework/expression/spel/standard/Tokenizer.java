@@ -16,13 +16,13 @@
 
 package org.springframework.expression.spel.standard;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import org.springframework.expression.spel.InternalParseException;
 import org.springframework.expression.spel.SpelMessage;
 import org.springframework.expression.spel.SpelParseException;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Lex some input data into a stream of tokens that can then be parsed.
@@ -42,14 +42,18 @@ class Tokenizer {
 	 * names, but they are handled later in {@link InternalSpelExpressionParser}.
 	 * <p>If this list gets changed, it must remain sorted since we use it with
 	 * {@link Arrays#binarySearch(Object[], Object)}.
+	 * <p>
+	 * 必须与 中的 TokenKind枚举常量名称匹配的替代文本运算符名称。
+	 * 请注意， AND 和 OR 也是替代文本名称，但它们稍后将在 InternalSpelExpressionParser中处理。
+	 * 如果此列表发生更改，则必须保持排序状态，因为我们将其与 Arrays.binarySearch(Object[], Object).
 	 */
 	private static final String[] ALTERNATIVE_OPERATOR_NAMES =
 			{"DIV", "EQ", "GE", "GT", "LE", "LT", "MOD", "NE", "NOT"};
-
+	// 存储所有字符的标志
 	private static final byte[] FLAGS = new byte[256];
-
+	// 是否是数字
 	private static final byte IS_DIGIT = 0x01;
-
+	// 是否是十六进制数字
 	private static final byte IS_HEXDIGIT = 0x02;
 
 	static {
@@ -64,15 +68,15 @@ class Tokenizer {
 		}
 	}
 
-
+	// 输入数据
 	private final String expressionString;
-
+	// 存储要处理的字符 添加了\0作为结尾
 	private final char[] charsToProcess;
 
 	private int pos;
 
 	private final int max;
-
+	// 存储生成的Token
 	private final List<Token> tokens = new ArrayList<>();
 
 
@@ -89,14 +93,12 @@ class Tokenizer {
 			char ch = this.charsToProcess[this.pos];
 			if (isAlphabetic(ch)) {
 				lexIdentifier();
-			}
-			else {
+			} else {
 				switch (ch) {
 					case '+':
 						if (isTwoCharToken(TokenKind.INC)) {
 							pushPairToken(TokenKind.INC);
-						}
-						else {
+						} else {
 							pushCharToken(TokenKind.PLUS);
 						}
 						break;
@@ -106,8 +108,7 @@ class Tokenizer {
 					case '-':
 						if (isTwoCharToken(TokenKind.DEC)) {
 							pushPairToken(TokenKind.DEC);
-						}
-						else {
+						} else {
 							pushCharToken(TokenKind.MINUS);
 						}
 						break;
@@ -156,35 +157,30 @@ class Tokenizer {
 					case '^':
 						if (isTwoCharToken(TokenKind.SELECT_FIRST)) {
 							pushPairToken(TokenKind.SELECT_FIRST);
-						}
-						else {
+						} else {
 							pushCharToken(TokenKind.POWER);
 						}
 						break;
 					case '!':
 						if (isTwoCharToken(TokenKind.NE)) {
 							pushPairToken(TokenKind.NE);
-						}
-						else if (isTwoCharToken(TokenKind.PROJECT)) {
+						} else if (isTwoCharToken(TokenKind.PROJECT)) {
 							pushPairToken(TokenKind.PROJECT);
-						}
-						else {
+						} else {
 							pushCharToken(TokenKind.NOT);
 						}
 						break;
 					case '=':
 						if (isTwoCharToken(TokenKind.EQ)) {
 							pushPairToken(TokenKind.EQ);
-						}
-						else {
+						} else {
 							pushCharToken(TokenKind.ASSIGN);
 						}
 						break;
 					case '&':
 						if (isTwoCharToken(TokenKind.SYMBOLIC_AND)) {
 							pushPairToken(TokenKind.SYMBOLIC_AND);
-						}
-						else {
+						} else {
 							pushCharToken(TokenKind.FACTORY_BEAN_REF);
 						}
 						break;
@@ -197,38 +193,32 @@ class Tokenizer {
 					case '?':
 						if (isTwoCharToken(TokenKind.SELECT)) {
 							pushPairToken(TokenKind.SELECT);
-						}
-						else if (isTwoCharToken(TokenKind.ELVIS)) {
+						} else if (isTwoCharToken(TokenKind.ELVIS)) {
 							pushPairToken(TokenKind.ELVIS);
-						}
-						else if (isTwoCharToken(TokenKind.SAFE_NAVI)) {
+						} else if (isTwoCharToken(TokenKind.SAFE_NAVI)) {
 							pushPairToken(TokenKind.SAFE_NAVI);
-						}
-						else {
+						} else {
 							pushCharToken(TokenKind.QMARK);
 						}
 						break;
 					case '$':
 						if (isTwoCharToken(TokenKind.SELECT_LAST)) {
 							pushPairToken(TokenKind.SELECT_LAST);
-						}
-						else {
+						} else {
 							lexIdentifier();  // '$' is another way to start an identifier
 						}
 						break;
 					case '>':
 						if (isTwoCharToken(TokenKind.GE)) {
 							pushPairToken(TokenKind.GE);
-						}
-						else {
+						} else {
 							pushCharToken(TokenKind.GT);
 						}
 						break;
 					case '<':
 						if (isTwoCharToken(TokenKind.LE)) {
 							pushPairToken(TokenKind.LE);
-						}
-						else {
+						} else {
 							pushCharToken(TokenKind.LT);
 						}
 						break;
@@ -286,8 +276,7 @@ class Tokenizer {
 				// may not be the end if the char after is also a '
 				if (this.charsToProcess[this.pos + 1] == '\'') {
 					this.pos++;  // skip over that too, and continue
-				}
-				else {
+				} else {
 					terminated = true;
 				}
 			}
@@ -310,8 +299,7 @@ class Tokenizer {
 				// may not be the end if the char after is also a "
 				if (this.charsToProcess[this.pos + 1] == '"') {
 					this.pos++;  // skip over that too, and continue
-				}
-				else {
+				} else {
 					terminated = true;
 				}
 			}
@@ -355,8 +343,7 @@ class Tokenizer {
 			if (isChar('L', 'l')) {
 				pushHexIntToken(subarray(start + 2, this.pos), true, start, this.pos);
 				this.pos++;
-			}
-			else {
+			} else {
 				pushHexIntToken(subarray(start + 2, this.pos), false, start, this.pos);
 			}
 			return;
@@ -401,8 +388,7 @@ class Tokenizer {
 			}
 			pushIntToken(subarray(start, endOfNumber), true, start, endOfNumber);
 			this.pos++;
-		}
-		else if (isExponentChar(this.charsToProcess[this.pos])) {
+		} else if (isExponentChar(this.charsToProcess[this.pos])) {
 			isReal = true;  // if it wasn't before, it is now
 			this.pos++;
 			char possibleSign = this.charsToProcess[this.pos];
@@ -419,59 +405,65 @@ class Tokenizer {
 			if (isFloatSuffix(this.charsToProcess[this.pos])) {
 				isFloat = true;
 				endOfNumber = ++this.pos;
-			}
-			else if (isDoubleSuffix(this.charsToProcess[this.pos])) {
+			} else if (isDoubleSuffix(this.charsToProcess[this.pos])) {
 				endOfNumber = ++this.pos;
 			}
 			pushRealToken(subarray(start, this.pos), isFloat, start, this.pos);
-		}
-		else {
+		} else {
 			ch = this.charsToProcess[this.pos];
 			boolean isFloat = false;
 			if (isFloatSuffix(ch)) {
 				isReal = true;
 				isFloat = true;
 				endOfNumber = ++this.pos;
-			}
-			else if (isDoubleSuffix(ch)) {
+			} else if (isDoubleSuffix(ch)) {
 				isReal = true;
 				endOfNumber = ++this.pos;
 			}
 			if (isReal) {
 				pushRealToken(subarray(start, endOfNumber), isFloat, start, endOfNumber);
-			}
-			else {
+			} else {
 				pushIntToken(subarray(start, endOfNumber), false, start, endOfNumber);
 			}
 		}
 	}
 
+	/**
+	 * 词法分析标识符
+	 */
 	private void lexIdentifier() {
+		// 记录标识符的起始位置
 		int start = this.pos;
+		// 通过循环查找标识符的结束位置
 		do {
 			this.pos++;
 		}
+		// 检查当前位置的字符是否为标识符的一部分
 		while (isIdentifier(this.charsToProcess[this.pos]));
+		// 提取从起始位置到结束位置的字符数组作为标识符
 		char[] subarray = subarray(start, this.pos);
 
-		// Check if this is the alternative (textual) representation of an operator (see
-		// ALTERNATIVE_OPERATOR_NAMES).
+		// 检查这个标识符是否是操作符的文本表示（参见ALTERNATIVE_OPERATOR_NAMES）
 		if (subarray.length == 2 || subarray.length == 3) {
+			// 将标识符转换为大写字符串以便比较
 			String asString = new String(subarray).toUpperCase();
+			// 使用二分查找法查找操作符
 			int idx = Arrays.binarySearch(ALTERNATIVE_OPERATOR_NAMES, asString);
+			// 如果找到匹配的操作符
 			if (idx >= 0) {
+				// 创建并推送相应的Token
 				pushOneCharOrTwoCharToken(TokenKind.valueOf(asString), start, subarray);
 				return;
 			}
 		}
+		// 创建并推送标识符Token
 		this.tokens.add(new Token(TokenKind.IDENTIFIER, subarray, start, this.pos));
 	}
 
 	private void pushIntToken(char[] data, boolean isLong, int start, int end) {
 		if (isLong) {
 			this.tokens.add(new Token(TokenKind.LITERAL_LONG, data, start, end));
-		}
-		else {
+		} else {
 			this.tokens.add(new Token(TokenKind.LITERAL_INT, data, start, end));
 		}
 	}
@@ -480,15 +472,13 @@ class Tokenizer {
 		if (data.length == 0) {
 			if (isLong) {
 				raiseParseException(start, SpelMessage.NOT_A_LONG, this.expressionString.substring(start, end + 1));
-			}
-			else {
+			} else {
 				raiseParseException(start, SpelMessage.NOT_AN_INTEGER, this.expressionString.substring(start, end));
 			}
 		}
 		if (isLong) {
 			this.tokens.add(new Token(TokenKind.LITERAL_HEXLONG, data, start, end));
-		}
-		else {
+		} else {
 			this.tokens.add(new Token(TokenKind.LITERAL_HEXINT, data, start, end));
 		}
 	}
@@ -496,12 +486,19 @@ class Tokenizer {
 	private void pushRealToken(char[] data, boolean isFloat, int start, int end) {
 		if (isFloat) {
 			this.tokens.add(new Token(TokenKind.LITERAL_REAL_FLOAT, data, start, end));
-		}
-		else {
+		} else {
 			this.tokens.add(new Token(TokenKind.LITERAL_REAL, data, start, end));
 		}
 	}
 
+	/**
+	 * 根据指定的起始和结束索引，从处理的字符数组中获取子数组
+	 * 此方法用于获取字符数组的一部分，以便后续处理
+	 *
+	 * @param start 子数组的起始索引（包含）
+	 * @param end   子数组的结束索引（不包含）
+	 * @return 一个包含从起始索引到结束索引-1的新字符数组
+	 */
 	private char[] subarray(int start, int end) {
 		return Arrays.copyOfRange(this.charsToProcess, start, end);
 	}
@@ -516,12 +513,15 @@ class Tokenizer {
 	}
 
 	/**
-	 * Push a token of just one character in length.
+	 * 向令牌列表中添加一个长度为一个字符的令牌。
+	 *
+	 * @param kind 要添加的令牌类型，表示令牌的性质。
 	 */
 	private void pushCharToken(TokenKind kind) {
 		this.tokens.add(new Token(kind, this.pos, this.pos + 1));
 		this.pos++;
 	}
+
 
 	/**
 	 * Push a token of two characters in length.
@@ -531,7 +531,19 @@ class Tokenizer {
 		this.pos += 2;
 	}
 
+	/**
+	 * 根据标记类型和位置推送一个单字符或双字符标记到tokens列表中
+	 * <p>
+	 * 此方法用于处理既可以作为单字符标记也可以作为双字符标记的情况
+	 * 它根据传入的标记类型（TokenKind）决定是推送一个字符还是两个字符的标记
+	 * 这在解析器中尤其有用，当某些字符序列可以有不同的含义（取决于上下文）
+	 *
+	 * @param kind 标记的类型，决定了是作为单字符还是双字符标记处理
+	 * @param pos  标记在输入数据中的起始位置
+	 * @param data 标记的数据内容，一个字符数组
+	 */
 	private void pushOneCharOrTwoCharToken(TokenKind kind, int pos, char[] data) {
+		// 根据标记类型和位置信息创建一个新的Token对象，并将其添加到tokens列表中
 		this.tokens.add(new Token(kind, data, pos, pos + kind.getLength()));
 	}
 
@@ -568,7 +580,14 @@ class Tokenizer {
 		return (FLAGS[ch] & IS_DIGIT) != 0;
 	}
 
+	/**
+	 * 判断一个字符是否为字母
+	 *
+	 * @param ch 待判断的字符
+	 * @return 如果字符是字母，则返回true；否则返回false
+	 */
 	private boolean isAlphabetic(char ch) {
+		// 使用Character类的isLetter方法判断字符是否为字母
 		return Character.isLetter(ch);
 	}
 

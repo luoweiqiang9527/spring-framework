@@ -16,15 +16,6 @@
 
 package org.springframework.expression.spel.standard;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Deque;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.regex.Pattern;
-
 import org.springframework.expression.ParseException;
 import org.springframework.expression.ParserContext;
 import org.springframework.expression.common.TemplateAwareExpressionParser;
@@ -80,6 +71,15 @@ import org.springframework.lang.Contract;
 import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.regex.Pattern;
+
 /**
  * Handwritten SpEL parser. Instances are reusable but are not thread-safe.
  *
@@ -116,6 +116,7 @@ class InternalSpelExpressionParser extends TemplateAwareExpressionParser {
 
 	/**
 	 * Create a parser with some configured behavior.
+	 *
 	 * @param configuration custom configuration options
 	 */
 	public InternalSpelExpressionParser(SpelParserConfiguration configuration) {
@@ -123,37 +124,65 @@ class InternalSpelExpressionParser extends TemplateAwareExpressionParser {
 	}
 
 
+	/**
+	 * 解析给定的SpEL表达式字符串
+	 * 该方法是SpEL表达式解析的核心，它将字符串形式的SpEL表达式转换为抽象语法树（AST），并封装为SpelExpression对象
+	 *
+	 * @param expressionString 待解析的SpEL表达式字符串
+	 * @param context          解析上下文，可能为null，用于在解析过程中传递额外信息
+	 * @return 解析后的SpelExpression对象
+	 * @throws ParseException 当解析过程中出现语法错误时抛出
+	 */
 	@Override
-	protected SpelExpression doParseExpression(String expressionString, @Nullable ParserContext context)
-			throws ParseException {
+	protected SpelExpression doParseExpression(String expressionString, @Nullable ParserContext context) throws ParseException {
 
+		// 检查表达式字符串的长度是否符合要求，不符合则抛出异常
 		checkExpressionLength(expressionString);
 
 		try {
+			// 初始化表达式字符串和词法分析器，并进行词法分析
 			this.expressionString = expressionString;
 			Tokenizer tokenizer = new Tokenizer(expressionString);
 			this.tokenStream = tokenizer.process();
 			this.tokenStreamLength = this.tokenStream.size();
 			this.tokenStreamPointer = 0;
 			this.constructedNodes.clear();
+
+			// 解析表达式并生成抽象语法树（AST）
 			SpelNodeImpl ast = eatExpression();
 			if (ast == null) {
+				// AST为空说明表达式为空，抛出异常
 				throw new SpelParseException(this.expressionString, 0, SpelMessage.OOD);
 			}
+
+			// 检查是否有未解析的输入
 			Token t = peekToken();
 			if (t != null) {
+				// 有未解析的输入，抛出异常
 				throw new SpelParseException(this.expressionString, t.startPos, SpelMessage.MORE_INPUT, toString(nextToken()));
 			}
+
+			// 返回解析后的SpelExpression对象
 			return new SpelExpression(expressionString, ast, this.configuration);
-		}
-		catch (InternalParseException ex) {
+		} catch (InternalParseException ex) {
+			// 内部解析异常，抛出原始异常
 			throw ex.getCause();
 		}
 	}
 
+	/**
+	 * 检查表达式的长度是否超过最大允许长度
+	 *
+	 * @param string 要检查的表达式字符串
+	 * @throws SpelEvaluationException 如果表达式的长度超过最大允许长度，则抛出此异常
+	 */
 	private void checkExpressionLength(String string) {
+		// 获取最大表达式长度限制
 		int maxLength = this.configuration.getMaximumExpressionLength();
+
+		// 如果表达式的长度超过最大允许长度
 		if (string.length() > maxLength) {
+			// 抛出异常，通知用户超过最大长度限制
 			throw new SpelEvaluationException(SpelMessage.MAX_EXPRESSION_LENGTH_EXCEEDED, maxLength);
 		}
 	}
@@ -285,8 +314,7 @@ class InternalSpelExpressionParser extends TemplateAwareExpressionParser {
 			checkRightOperand(t, rhExpr);
 			if (t.kind == TokenKind.PLUS) {
 				expr = new OpPlus(t.startPos, t.endPos, expr, rhExpr);
-			}
-			else if (t.kind == TokenKind.MINUS) {
+			} else if (t.kind == TokenKind.MINUS) {
 				expr = new OpMinus(t.startPos, t.endPos, expr, rhExpr);
 			}
 		}
@@ -303,11 +331,9 @@ class InternalSpelExpressionParser extends TemplateAwareExpressionParser {
 			checkOperands(t, expr, rhExpr);
 			if (t.kind == TokenKind.STAR) {
 				expr = new OpMultiply(t.startPos, t.endPos, expr, rhExpr);
-			}
-			else if (t.kind == TokenKind.DIV) {
+			} else if (t.kind == TokenKind.DIV) {
 				expr = new OpDivide(t.startPos, t.endPos, expr, rhExpr);
-			}
-			else if (t.kind == TokenKind.MOD) {
+			} else if (t.kind == TokenKind.MOD) {
 				expr = new OpModulus(t.startPos, t.endPos, expr, rhExpr);
 			}
 		}
@@ -425,8 +451,7 @@ class InternalSpelExpressionParser extends TemplateAwareExpressionParser {
 		}
 		if (peekToken() == null) {
 			throw internalException(t.startPos, SpelMessage.OOD);
-		}
-		else {
+		} else {
 			throw internalException(t.startPos, SpelMessage.UNEXPECTED_DATA_AFTER_DOT, toString(peekToken()));
 		}
 	}
@@ -527,24 +552,18 @@ class InternalSpelExpressionParser extends TemplateAwareExpressionParser {
 	private SpelNodeImpl eatStartNode() {
 		if (maybeEatLiteral()) {
 			return pop();
-		}
-		else if (maybeEatParenExpression()) {
+		} else if (maybeEatParenExpression()) {
 			return pop();
-		}
-		else if (maybeEatTypeReference() || maybeEatNullReference() || maybeEatConstructorReference() ||
+		} else if (maybeEatTypeReference() || maybeEatNullReference() || maybeEatConstructorReference() ||
 				maybeEatMethodOrProperty(false) || maybeEatFunctionOrVar()) {
 			return pop();
-		}
-		else if (maybeEatBeanReference()) {
+		} else if (maybeEatBeanReference()) {
 			return pop();
-		}
-		else if (maybeEatProjection(false) || maybeEatSelection(false) || maybeEatIndexer(false)) {
+		} else if (maybeEatProjection(false) || maybeEatSelection(false) || maybeEatIndexer(false)) {
 			return pop();
-		}
-		else if (maybeEatInlineListOrMap()) {
+		} else if (maybeEatInlineListOrMap()) {
 			return pop();
-		}
-		else {
+		} else {
 			return null;
 		}
 	}
@@ -559,21 +578,18 @@ class InternalSpelExpressionParser extends TemplateAwareExpressionParser {
 			if (peekToken(TokenKind.IDENTIFIER)) {
 				beanNameToken = eatToken(TokenKind.IDENTIFIER);
 				beanName = beanNameToken.stringValue();
-			}
-			else if (peekToken(TokenKind.LITERAL_STRING)) {
+			} else if (peekToken(TokenKind.LITERAL_STRING)) {
 				beanNameToken = eatToken(TokenKind.LITERAL_STRING);
 				beanName = beanNameToken.stringValue();
 				beanName = beanName.substring(1, beanName.length() - 1);
-			}
-			else {
+			} else {
 				throw internalException(beanRefToken.startPos, SpelMessage.INVALID_BEAN_REFERENCE);
 			}
 			BeanReference beanReference;
 			if (beanRefToken.getKind() == TokenKind.FACTORY_BEAN_REF) {
 				String beanNameString = String.valueOf(TokenKind.FACTORY_BEAN_REF.tokenChars) + beanName;
 				beanReference = new BeanReference(beanRefToken.startPos, beanNameToken.endPos, beanNameString);
-			}
-			else {
+			} else {
 				beanReference = new BeanReference(beanNameToken.startPos, beanNameToken.endPos, beanName);
 			}
 			this.constructedNodes.push(beanReference);
@@ -651,13 +667,11 @@ class InternalSpelExpressionParser extends TemplateAwareExpressionParser {
 		if (closingCurly != null && peekToken(TokenKind.RCURLY, true)) {
 			// empty list '{}'
 			expr = new InlineList(t.startPos, closingCurly.endPos);
-		}
-		else if (peekToken(TokenKind.COLON, true)) {
+		} else if (peekToken(TokenKind.COLON, true)) {
 			closingCurly = eatToken(TokenKind.RCURLY);
 			// empty map '{:}'
 			expr = new InlineMap(t.startPos, closingCurly.endPos);
-		}
-		else {
+		} else {
 			SpelNodeImpl firstExpression = eatExpression();
 			// Next is either:
 			// '}' - end of list
@@ -668,8 +682,7 @@ class InternalSpelExpressionParser extends TemplateAwareExpressionParser {
 				elements.add(firstExpression);
 				closingCurly = eatToken(TokenKind.RCURLY);
 				expr = new InlineList(t.startPos, closingCurly.endPos, elements.toArray(new SpelNodeImpl[0]));
-			}
-			else if (peekToken(TokenKind.COMMA, true)) {  // multi-item list
+			} else if (peekToken(TokenKind.COMMA, true)) {  // multi-item list
 				List<SpelNodeImpl> elements = new ArrayList<>();
 				elements.add(firstExpression);
 				do {
@@ -679,8 +692,7 @@ class InternalSpelExpressionParser extends TemplateAwareExpressionParser {
 				closingCurly = eatToken(TokenKind.RCURLY);
 				expr = new InlineList(t.startPos, closingCurly.endPos, elements.toArray(new SpelNodeImpl[0]));
 
-			}
-			else if (peekToken(TokenKind.COLON, true)) {  // map!
+			} else if (peekToken(TokenKind.COLON, true)) {  // map!
 				List<SpelNodeImpl> elements = new ArrayList<>();
 				elements.add(firstExpression);
 				elements.add(eatExpression());
@@ -691,8 +703,7 @@ class InternalSpelExpressionParser extends TemplateAwareExpressionParser {
 				}
 				closingCurly = eatToken(TokenKind.RCURLY);
 				expr = new InlineMap(t.startPos, closingCurly.endPos, elements.toArray(new SpelNodeImpl[0]));
-			}
-			else {
+			} else {
 				throw internalException(t.startPos, SpelMessage.OOD);
 			}
 		}
@@ -727,11 +738,9 @@ class InternalSpelExpressionParser extends TemplateAwareExpressionParser {
 		eatToken(TokenKind.RSQUARE);
 		if (t.kind == TokenKind.SELECT_FIRST) {
 			this.constructedNodes.push(new Selection(nullSafeNavigation, Selection.FIRST, t.startPos, t.endPos, expr));
-		}
-		else if (t.kind == TokenKind.SELECT_LAST) {
+		} else if (t.kind == TokenKind.SELECT_LAST) {
 			this.constructedNodes.push(new Selection(nullSafeNavigation, Selection.LAST, t.startPos, t.endPos, expr));
-		}
-		else {
+		} else {
 			this.constructedNodes.push(new Selection(nullSafeNavigation, Selection.ALL, t.startPos, t.endPos, expr));
 		}
 		return true;
@@ -752,7 +761,7 @@ class InternalSpelExpressionParser extends TemplateAwareExpressionParser {
 		}
 		if (qualifiedIdPieces.isEmpty()) {
 			if (node == null) {
-				throw internalException( this.expressionString.length(), SpelMessage.OOD);
+				throw internalException(this.expressionString.length(), SpelMessage.OOD);
 			}
 			throw internalException(node.startPos, SpelMessage.NOT_EXPECTED_TOKEN,
 					"qualified ID", node.getKind().toString().toLowerCase());
@@ -795,7 +804,7 @@ class InternalSpelExpressionParser extends TemplateAwareExpressionParser {
 	}
 
 	//constructor
-    //:	('new' qualifiedId LPAREN) => 'new' qualifiedId ctorArgs -> ^(CONSTRUCTOR qualifiedId ctorArgs)
+	//:	('new' qualifiedId LPAREN) => 'new' qualifiedId ctorArgs -> ^(CONSTRUCTOR qualifiedId ctorArgs)
 	private boolean maybeEatConstructorReference() {
 		if (peekIdentifierToken("new")) {
 			Token newToken = takeToken();
@@ -814,8 +823,7 @@ class InternalSpelExpressionParser extends TemplateAwareExpressionParser {
 				while (peekToken(TokenKind.LSQUARE, true)) {
 					if (!peekToken(TokenKind.RSQUARE)) {
 						dimensions.add(eatExpression());
-					}
-					else {
+					} else {
 						// A missing array dimension is tracked as null and will be
 						// rejected later during evaluation.
 						dimensions.add(null);
@@ -827,8 +835,7 @@ class InternalSpelExpressionParser extends TemplateAwareExpressionParser {
 				}
 				push(new ConstructorReference(newToken.startPos, newToken.endPos,
 						dimensions.toArray(new SpelNodeImpl[0]), nodes.toArray(new SpelNodeImpl[0])));
-			}
-			else {
+			} else {
 				// regular constructor invocation
 				eatConstructorArgs(nodes);
 				push(new ConstructorReference(newToken.startPos, newToken.endPos, nodes.toArray(new SpelNodeImpl[0])));
@@ -861,32 +868,23 @@ class InternalSpelExpressionParser extends TemplateAwareExpressionParser {
 		}
 		if (t.kind == TokenKind.LITERAL_INT) {
 			push(Literal.getIntLiteral(t.stringValue(), t.startPos, t.endPos, 10));
-		}
-		else if (t.kind == TokenKind.LITERAL_LONG) {
+		} else if (t.kind == TokenKind.LITERAL_LONG) {
 			push(Literal.getLongLiteral(t.stringValue(), t.startPos, t.endPos, 10));
-		}
-		else if (t.kind == TokenKind.LITERAL_HEXINT) {
+		} else if (t.kind == TokenKind.LITERAL_HEXINT) {
 			push(Literal.getIntLiteral(t.stringValue(), t.startPos, t.endPos, 16));
-		}
-		else if (t.kind == TokenKind.LITERAL_HEXLONG) {
+		} else if (t.kind == TokenKind.LITERAL_HEXLONG) {
 			push(Literal.getLongLiteral(t.stringValue(), t.startPos, t.endPos, 16));
-		}
-		else if (t.kind == TokenKind.LITERAL_REAL) {
+		} else if (t.kind == TokenKind.LITERAL_REAL) {
 			push(Literal.getRealLiteral(t.stringValue(), t.startPos, t.endPos, false));
-		}
-		else if (t.kind == TokenKind.LITERAL_REAL_FLOAT) {
+		} else if (t.kind == TokenKind.LITERAL_REAL_FLOAT) {
 			push(Literal.getRealLiteral(t.stringValue(), t.startPos, t.endPos, true));
-		}
-		else if (peekIdentifierToken("true")) {
+		} else if (peekIdentifierToken("true")) {
 			push(new BooleanLiteral(t.stringValue(), t.startPos, t.endPos, true));
-		}
-		else if (peekIdentifierToken("false")) {
+		} else if (peekIdentifierToken("false")) {
 			push(new BooleanLiteral(t.stringValue(), t.startPos, t.endPos, false));
-		}
-		else if (t.kind == TokenKind.LITERAL_STRING) {
+		} else if (t.kind == TokenKind.LITERAL_STRING) {
 			push(new StringLiteral(t.stringValue(), t.startPos, t.endPos, t.stringValue()));
-		}
-		else {
+		} else {
 			return false;
 		}
 		nextToken();
@@ -907,8 +905,7 @@ class InternalSpelExpressionParser extends TemplateAwareExpressionParser {
 			eatToken(TokenKind.RPAREN);
 			push(expr);
 			return true;
-		}
-		else {
+		} else {
 			return false;
 		}
 	}

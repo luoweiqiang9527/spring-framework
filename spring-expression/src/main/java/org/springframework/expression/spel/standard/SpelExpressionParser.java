@@ -53,14 +53,33 @@ public class SpelExpressionParser extends TemplateAwareExpressionParser {
 	}
 
 
+	/**
+	 * 解析原始的SpEL表达式字符串
+	 * 此方法主要用于解析未经过预编译的SpEL表达式字符串，它将调用内部的解析逻辑来处理表达式
+	 *
+	 * @param expressionString 表达式字符串，不能为空或空白
+	 * @return 返回解析后的SpelExpression对象
+	 * @throws ParseException 如果表达式字符串不符合语法要求，将抛出此异常
+	 */
 	public SpelExpression parseRaw(String expressionString) throws ParseException {
+		// 校验表达式字符串是否有效
 		Assert.hasText(expressionString, "'expressionString' must not be null or blank");
+		// 调用内部解析方法处理表达式字符串，传递null作为上下文参数
 		return doParseExpression(expressionString, null);
 	}
 
+	/**
+	 * 解析SpEL表达式
+	 *
+	 * @param expressionString SpEL表达式的字符串表示
+	 * @param context 解析上下文，可能为空
+	 * @return 解析后的SpelExpression对象
+	 * @throws ParseException 如果解析过程中发生错误
+	 */
 	@Override
 	protected SpelExpression doParseExpression(String expressionString, @Nullable ParserContext context) throws ParseException {
-		return new InternalSpelExpressionParser(this.configuration).doParseExpression(expressionString, context);
+	    // 委托内部SpelExpressionParser进行实际的表达式解析
+	    return new InternalSpelExpressionParser(this.configuration).doParseExpression(expressionString, context);
 	}
 
 }

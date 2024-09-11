@@ -1,12 +1,24 @@
+// 定义脚本的描述信息
 description = "Spring Expression Language (SpEL)"
 
+// 应用Kotlin插件，以使用Kotlin相关功能
 apply plugin: "kotlin"
 
+// 配置依赖项
 dependencies {
-	api(project(":spring-core"))
-	optional("org.jetbrains.kotlin:kotlin-reflect")
-	testImplementation(testFixtures(project(":spring-core")))
-	testImplementation("org.jetbrains.kotlin:kotlin-reflect")
-	testImplementation("org.jetbrains.kotlin:kotlin-stdlib")
-	testImplementation("com.fasterxml.jackson.core:jackson-databind")
+    // 定义项目对 "spring-core" 模块的API依赖
+    api(project(":spring-core"))
+
+    // 定义对 Kotlin 反射的可选依赖
+    optional("org.jetbrains.kotlin:kotlin-reflect")
+
+    // 定义测试依赖，包括 "spring-core" 项目中的测试fixture
+    testImplementation(testFixtures(project(":spring-core")))
+
+    // 为测试环境添加 Kotlin 反射和标准库的依赖
+    testImplementation("org.jetbrains.kotlin:kotlin-reflect")
+    testImplementation("org.jetbrains.kotlin:kotlin-stdlib")
+
+    // 添加 Jackson 库的依赖，用于测试中的JSON处理
+    testImplementation("com.fasterxml.jackson.core:jackson-databind")
 }

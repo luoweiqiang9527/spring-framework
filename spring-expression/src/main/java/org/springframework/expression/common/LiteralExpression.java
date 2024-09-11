@@ -47,8 +47,15 @@ public class LiteralExpression implements Expression {
 
 
 	@Override
+	/**
+	 * 返回表达式的字符串表示形式
+	 * 该方法最终覆盖了基类的方法，确保返回的是字面量的值
+	 * 由于该方法被final修饰符修饰，所以它不能在任何子类中被进一步覆盖
+	 *
+	 * @return 返回字面量值的字符串表示形式
+	 */
 	public final String getExpressionString() {
-		return this.literalValue;
+	    return this.literalValue;
 	}
 
 	@Override

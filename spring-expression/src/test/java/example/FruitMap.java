@@ -22,6 +22,7 @@ import java.util.Map;
 /**
  * Type that can be indexed by the {@link Color} enum (i.e., something other
  * than an int, Integer, or String) and whose indexed values are Strings.
+ * 可以由 {@link Color} 枚举（即 int、Integer 或 String 以外的其他内容）编制索引的类型，其索引值为 Strings。
  */
 public class FruitMap {
 
@@ -36,10 +37,19 @@ public class FruitMap {
 		// We don't map PURPLE so that we can test for an unsupported color.
 	}
 
+	/**
+	 * 根据颜色获取对应的水果
+	 *
+	 * @param color 颜色，用于查找对应水果的关键
+	 * @return 对应颜色的水果
+	 * @throws IllegalArgumentException 如果给定的颜色在map中没有对应的水果，抛出此异常
+	 */
 	public String getFruit(Color color) {
+		// 检查颜色是否存在于map中，如果不存在则抛出异常
 		if (!this.map.containsKey(color)) {
 			throw new IllegalArgumentException("No fruit for color " + color);
 		}
+		// 返回对应颜色的水果
 		return this.map.get(color);
 	}
 
