@@ -270,13 +270,22 @@ public abstract class CacheAspectSupport extends AbstractCacheInvoker
 				setCacheManager(this.beanFactory.getBean(CacheManager.class));
 			}
 			catch (NoUniqueBeanDefinitionException ex) {
-				StringBuilder message = new StringBuilder("no CacheResolver specified and expected a single CacheManager bean, but found ");
-				message.append(ex.getNumberOfBeansFound());
-				if (ex.getBeanNamesFound() != null) {
-					message.append(": [").append(StringUtils.collectionToCommaDelimitedString(ex.getBeanNamesFound())).append("]");
+				int numberOfBeansFound = ex.getNumberOfBeansFound();
+				Collection<String> beanNamesFound = ex.getBeanNamesFound();
+
+				StringBuilder message = new StringBuilder("no CacheResolver specified and expected single matching CacheManager but found ");
+				message.append(numberOfBeansFound);
+				if (beanNamesFound != null) {
+					message.append(": ").append(StringUtils.collectionToCommaDelimitedString(beanNamesFound));
 				}
-				message.append(" - mark one as primary or declare a specific CacheManager to use.");
-				throw new NoUniqueBeanDefinitionException(CacheManager.class, ex.getNumberOfBeansFound(), message.toString());
+				String exceptionMessage = message.toString();
+
+				if (beanNamesFound != null) {
+					throw new NoUniqueBeanDefinitionException(CacheManager.class, beanNamesFound, exceptionMessage);
+				}
+				else {
+					throw new NoUniqueBeanDefinitionException(CacheManager.class, numberOfBeansFound, exceptionMessage);
+				}
 			}
 			catch (NoSuchBeanDefinitionException ex) {
 				throw new NoSuchBeanDefinitionException(CacheManager.class, "no CacheResolver specified - "
@@ -447,7 +456,7 @@ public abstract class CacheAspectSupport extends AbstractCacheInvoker
 			Object key = generateKey(context, CacheOperationExpressionEvaluator.NO_RESULT);
 			Cache cache = context.getCaches().iterator().next();
 			if (CompletableFuture.class.isAssignableFrom(method.getReturnType())) {
-				return cache.retrieve(key, () -> (CompletableFuture<?>) invokeOperation(invoker));
+				return doRetrieve(cache, key, () -> (CompletableFuture<?>) invokeOperation(invoker));
 			}
 			if (this.reactiveCachingHandler != null) {
 				Object returnValue = this.reactiveCachingHandler.executeSynchronized(invoker, method, cache, key);
@@ -456,7 +465,7 @@ public abstract class CacheAspectSupport extends AbstractCacheInvoker
 				}
 			}
 			try {
-				return wrapCacheValue(method, cache.get(key, () -> unwrapReturnValue(invokeOperation(invoker))));
+				return wrapCacheValue(method, doGet(cache, key, () -> unwrapReturnValue(invokeOperation(invoker))));
 			}
 			catch (Cache.ValueRetrievalException ex) {
 				// Directly propagate ThrowableWrapper from the invoker,
@@ -506,7 +515,7 @@ public abstract class CacheAspectSupport extends AbstractCacheInvoker
 
 		for (Cache cache : context.getCaches()) {
 			if (CompletableFuture.class.isAssignableFrom(context.getMethod().getReturnType())) {
-				CompletableFuture<?> result = cache.retrieve(key);
+				CompletableFuture<?> result = doRetrieve(cache, key);
 				if (result != null) {
 					return result.exceptionally(ex -> {
 						getErrorHandler().handleCacheGetError((RuntimeException) ex, cache, key);
@@ -514,6 +523,9 @@ public abstract class CacheAspectSupport extends AbstractCacheInvoker
 					}).thenCompose(value -> (CompletableFuture<?>) evaluate(
 							(value != null ? CompletableFuture.completedFuture(unwrapCacheValue(value)) : null),
 							invoker, method, contexts));
+				}
+				else {
+					continue;
 				}
 			}
 			if (this.reactiveCachingHandler != null) {
@@ -1132,7 +1144,7 @@ public abstract class CacheAspectSupport extends AbstractCacheInvoker
 
 			ReactiveAdapter adapter = this.registry.getAdapter(context.getMethod().getReturnType());
 			if (adapter != null) {
-				CompletableFuture<?> cachedFuture = cache.retrieve(key);
+				CompletableFuture<?> cachedFuture = doRetrieve(cache, key);
 				if (cachedFuture == null) {
 					return null;
 				}

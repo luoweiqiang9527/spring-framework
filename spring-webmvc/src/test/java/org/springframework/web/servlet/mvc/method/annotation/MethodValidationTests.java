@@ -19,6 +19,7 @@ package org.springframework.web.servlet.mvc.method.annotation;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -28,10 +29,12 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 import jakarta.validation.executable.ExecutableValidator;
 import jakarta.validation.metadata.BeanDescriptor;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.context.MessageSourceResolvable;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -91,6 +94,8 @@ class MethodValidationTests {
 
 	@BeforeEach
 	void setup() throws Exception {
+		LocaleContextHolder.setDefaultLocale(Locale.UK);
+
 		LocalValidatorFactoryBean validatorBean = new LocalValidatorFactoryBean();
 		validatorBean.afterPropertiesSet();
 		this.jakartaValidator = new InvocationCountingValidator(validatorBean);
@@ -118,6 +123,11 @@ class MethodValidationTests {
 				List.of(new StringHttpMessageConverter(), new MappingJackson2HttpMessageConverter()));
 		handlerAdapter.afterPropertiesSet();
 		return handlerAdapter;
+	}
+
+	@AfterEach
+	void reset() {
+		LocaleContextHolder.setDefaultLocale(null);
 	}
 
 
@@ -172,7 +182,7 @@ class MethodValidationTests {
 		assertThat(this.jakartaValidator.getValidationCount()).isEqualTo(1);
 		assertThat(this.jakartaValidator.getMethodValidationCount()).isEqualTo(1);
 
-		assertThat(ex.getAllValidationResults()).hasSize(2);
+		assertThat(ex.getParameterValidationResults()).hasSize(2);
 
 		assertBeanResult(ex.getBeanResults().get(0), "student", List.of("""
 			Field error in object 'student' on field 'name': rejected value [name=Faustino1234]; \
@@ -183,7 +193,7 @@ class MethodValidationTests {
 		));
 
 		assertValueResult(ex.getValueResults().get(0), 2, "123", List.of("""
-			org.springframework.context.support.DefaultMessageSourceResolvable: \
+			org.springframework.validation.beanvalidation.MethodValidationAdapter$ViolationMessageSourceResolvable: \
 			codes [Size.validController#handle.myHeader,Size.myHeader,Size.java.lang.String,Size]; \
 			arguments [org.springframework.context.support.DefaultMessageSourceResolvable: \
 			codes [validController#handle.myHeader,myHeader]; arguments []; default message [myHeader],10,5]; \
@@ -227,7 +237,7 @@ class MethodValidationTests {
 		assertThat(this.jakartaValidator.getValidationCount()).isEqualTo(1);
 		assertThat(this.jakartaValidator.getMethodValidationCount()).isEqualTo(1);
 
-		assertThat(ex.getAllValidationResults()).hasSize(2);
+		assertThat(ex.getParameterValidationResults()).hasSize(2);
 
 		assertBeanResult(ex.getBeanResults().get(0), "personList", List.of("""
 			Field error in object 'personList' on field 'name': rejected value [Faustino1234]; \

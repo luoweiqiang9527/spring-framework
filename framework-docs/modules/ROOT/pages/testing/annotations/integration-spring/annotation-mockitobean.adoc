@@ -23,6 +23,9 @@ creating unnecessary contexts.
 ====
 
 Each annotation also defines Mockito-specific attributes to fine-tune the mocking details.
+During the test class lifecycle, Mockito is set up via the `Mockito#mockitoSession()`
+mechanism. Notably, it enables `STRICT_STUBS` mode by default. This can be changed on
+individual test classes with the `@MockitoBeanSettings` annotation.
 
 The `@MockitoBean` annotation uses the `REPLACE_OR_CREATE_DEFINITION`
 xref:testing/testcontext-framework/bean-overriding.adoc#testcontext-bean-overriding-custom[strategy for test bean overriding].
@@ -39,7 +42,7 @@ The following example shows how to use the default behavior of the `@MockitoBean
 ======
 Java::
 +
-[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+[source,java,indent=0,subs="verbatim,quotes"]
 ----
 	class OverrideBeanTests {
 		@MockitoBean // <1>
@@ -63,7 +66,7 @@ The following example uses a by-name lookup, rather than a by-type lookup:
 ======
 Java::
 +
-[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+[source,java,indent=0,subs="verbatim,quotes"]
 ----
 	class OverrideBeanTests {
 		@MockitoBean(name = "service") // <1>
@@ -84,7 +87,7 @@ The following example shows how to use the default behavior of the `@MockitoSpyB
 ======
 Java::
 +
-[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+[source,java,indent=0,subs="verbatim,quotes"]
 ----
 	class OverrideBeanTests {
 		@MockitoSpyBean // <1>
@@ -107,7 +110,7 @@ The following example uses a by-name lookup, rather than a by-type lookup:
 ======
 Java::
 +
-[source,java,indent=0,subs="verbatim,quotes",role="primary"]
+[source,java,indent=0,subs="verbatim,quotes"]
 ----
 	class OverrideBeanTests {
 		@MockitoSpyBean(name = "service") // <1>

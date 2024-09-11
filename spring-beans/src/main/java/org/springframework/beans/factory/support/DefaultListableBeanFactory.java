@@ -129,15 +129,15 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 		implements ConfigurableListableBeanFactory, BeanDefinitionRegistry, Serializable {
 
 	@Nullable
-	private static Class<?> javaxInjectProviderClass;
+	private static Class<?> jakartaInjectProviderClass;
 
 	static {
 		try {
-			javaxInjectProviderClass =
+			jakartaInjectProviderClass =
 					ClassUtils.forName("jakarta.inject.Provider", DefaultListableBeanFactory.class.getClassLoader());
 		} catch (ClassNotFoundException ex) {
 			// JSR-330 API not available - Provider interface simply not supported then.
-			javaxInjectProviderClass = null;
+			jakartaInjectProviderClass = null;
 		}
 	}
 
@@ -1514,7 +1514,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 		} else if (ObjectFactory.class == descriptor.getDependencyType() ||
 				ObjectProvider.class == descriptor.getDependencyType()) {
 			return new DependencyObjectProvider(descriptor, requestingBeanName);
-		} else if (javaxInjectProviderClass == descriptor.getDependencyType()) {
+		} else if (jakartaInjectProviderClass == descriptor.getDependencyType()) {
 			return new Jsr330Factory().createDependencyProvider(descriptor, requestingBeanName);
 		} else if (descriptor.supportsLazyResolution()) {
 			Object result = getAutowireCandidateResolver().getLazyResolutionProxyIfNecessary(
